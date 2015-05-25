@@ -1,0 +1,27 @@
+##############
+Joe Czepil
+V00774878
+May 23rd, 2015
+##############
+
+FILES INCLUDED:
+
+Readme.txt
+csc360a1.c
+csc360list.h
+
+FILE csc360a1.c
+
+-This file includes the main and all functions required of the assignment
+-Things that were tested and worked include:
+--cd ~
+--cd ..
+--cd <pathname>
+--bg <process>
+--bglist
+--Messages displayed to screen when processes end
+
+FILE csc360list.c
+
+-This files includes the linkedlist data structure and print function
+-The linkedlist is used for keeping track of running processes for the command "bglist"
