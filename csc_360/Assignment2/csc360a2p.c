@@ -29,24 +29,164 @@ char dir = 'e';
 char* direc = &dir;
 
 void load_train(struct Train* tr);
-void add_train(struct Train * head, struct Train * newtrain);
+void add_train(struct Train * newtrain);
 void getinput(int argc, struct Train* trainp, char *argv[]);
 void choochoo(struct Train* curtr);
 void *create_thread(void *arg);
+void print_queue(struct Train* tr);
 
 pthread_barrier_t barrier;
 pthread_mutex_t maintrack;
+pthread_mutex_t highwest;
+pthread_mutex_t higheast;
+pthread_mutex_t lowwest;
+pthread_mutex_t loweast;
+pthread_cond_t chighwest;
+pthread_cond_t chigheast;
+pthread_cond_t clowwest;
+pthread_cond_t cloweast;
+pthread_cond_t cmaintrack;
 
 /*
 Add a train to it's train station linked list
 */
-void add_train(struct Train * head, struct Train * newtrain){
-	struct Train * temp = head;	
-	while(temp->next != NULL){
-		temp = temp->next;
+void add_train(struct Train * newtrain){
+	struct Train * temp;
+	struct Train * temp2;
+	if(newtrain->priority == 1){
+		if(*newtrain->direction == 'e'){
+
+
+			//while(pthread_mutex_lock(&higheast) != 0);
+			temp = higheasttrain;
+			temp2 = higheasttrain;		
+			if(temp == NULL){
+				temp = newtrain;
+				return;
+			}	
+			while(temp->loadtime < newtrain->loadtime && temp->next != NULL){
+				temp2 = temp;		
+				temp = temp->next;
+			} //while
+			if(temp->loadtime == newtrain->loadtime){
+				if(temp->id < newtrain->id){
+					if(temp->next == NULL){
+						temp->next = newtrain;
+					} else {
+						temp2 = temp->next;
+						temp->next = newtrain;
+						newtrain->next = temp2;
+					} //if
+				} else {
+					temp2->next = newtrain;
+					newtrain->next = temp;
+				} 
+			} else {
+				temp2->next = newtrain;
+				newtrain->next = temp;
+			} //equal loadtime
+			//pthread_cond_signal(&chigheast);
+			//pthread_mutex_unlock(&higheast);
+
+
+		} else {
+			//while(pthread_mutex_lock(&higheast) != 0);
+			temp = highwesttrain;
+			temp2 = highwesttrain;	
+			if(temp == NULL){
+				temp = newtrain;
+				return;
+			}	
+			while(temp->loadtime < newtrain->loadtime && temp->next != NULL){
+				temp2 = temp;		
+				temp = temp->next;
+			} //while
+			if(temp->loadtime == newtrain->loadtime){
+				if(temp->id < newtrain->id){
+					if(temp->next == NULL){
+						temp->next = newtrain;
+					} else {
+						temp2 = temp->next;
+						temp->next = newtrain;
+						newtrain->next = temp2;
+					} //if
+				} else {
+					temp2->next = newtrain;
+					newtrain->next = temp;
+				} 
+			} else {
+				temp2->next = newtrain;
+				newtrain->next = temp;
+			} //equal loadtime
+			//pthread_cond_signal(&chigheast);
+			//pthread_mutex_unlock(&higheast);
+		}
+	}else if(newtrain->priority == 0){
+		if(*newtrain->direction == 'w'){
+			//while(pthread_mutex_lock(&higheast) != 0);
+			temp = lowwesttrain;
+			temp2 = lowwesttrain;	
+			if(temp == NULL){
+				temp = newtrain;
+				return;
+			}	
+			while(temp->loadtime < newtrain->loadtime && temp->next != NULL){
+				temp2 = temp;		
+				temp = temp->next;
+			} //while
+			if(temp->loadtime == newtrain->loadtime){
+				if(temp->id < newtrain->id){
+					if(temp->next == NULL){
+						temp->next = newtrain;
+					} else {
+						temp2 = temp->next;
+						temp->next = newtrain;
+						newtrain->next = temp2;
+					} //if
+				} else {
+					temp2->next = newtrain;
+					newtrain->next = temp;
+				} 
+			} else {
+				temp2->next = newtrain;
+				newtrain->next = temp;
+			} //equal loadtime
+			//pthread_cond_signal(&chigheast);
+			//pthread_mutex_unlock(&higheast);	
+		} else {
+			//while(pthread_mutex_lock(&higheast) != 0);
+			temp = loweasttrain;
+			temp2 = loweasttrain;	
+			if(temp == NULL){
+				temp = newtrain;
+				return;
+			}	
+			while(temp->loadtime < newtrain->loadtime && temp->next != NULL){
+				temp2 = temp;		
+				temp = temp->next;
+			} //while
+			if(temp->loadtime == newtrain->loadtime){
+				if(temp->id < newtrain->id){
+					if(temp->next == NULL){
+						temp->next = newtrain;
+					} else {
+						temp2 = temp->next;
+						temp->next = newtrain;
+						newtrain->next = temp2;
+					} //if
+				} else {
+					temp2->next = newtrain;
+					newtrain->next = temp;
+				} 
+			} else {
+				temp2->next = newtrain;
+				newtrain->next = temp;
+			} //equal loadtime
+			//pthread_cond_signal(&chigheast);
+			//pthread_mutex_unlock(&higheast);
+		}
 	}
-	temp->next = newtrain;
-}
+} //function
 
 /*
 Parse the input and create each train with it's details
@@ -97,6 +237,7 @@ void choochoo(struct Train* curtr){
 		printf("Train %d has crossed the main track heading West\n", curtr->id);
 	}
 	direc = curtr->direction;
+	return;
 	//curtr = curtr->next->next;
 	//broadcast
 	//unlock mutex
@@ -113,54 +254,10 @@ void *create_thread(void *arg){
 	tr = (struct Train*) arg;
 	pthread_barrier_wait(&barrier);
 	load_train(tr);
-	if(tr->priority == '1'){
-		if(*tr->direction == 'e'){
-			add_train(higheasttrain, tr);
-		} else {
-			add_train(highwesttrain, tr);
-		}
-	}else if(tr->priority == '0'){
-		if(*tr->direction == 'w'){
-			add_train(lowwesttrain, tr);
-		} else {
-			add_train(loweasttrain, tr);
-		}
-	}
-	//lock before choochoo
-	//while true
-		//wait for a signal
-		//if tr is in the front of any queue	
-			//if tr is highwest
-				//if higheast has train
-					//if higheast loadingtime > tr loadingtime
-						//lock with higheast pointer
-						//choochoo
-						//exit while
-			//if tr is lowwest
-				//if highwest or higheast has a train
-					//quit
-				//else
-					//if loweast loadingtime > tr loadingtime
-						//lock with lowwest pointer
-						//choochoo
-						//exit while
-			//if tr is higheast
-				//if highwest has train
-					//if highwest loadingtime > tr loadingtime
-						//lock with highwest pointer
-						//choochoo
-						//exit while
-			//if tr is loweast
-				//if highwest or higheast has a train
-					//quit
-				//else
-					//if lowwest loadingtime > tr loadingtime
-						//lock with loweast pointer
-						//choochoo
-						//exit while
+	add_train(tr);
+	//while(pthread_mutex_lock(&maintrack) != 0);
 	choochoo(tr);
-	/*wait'
-	remove;*/
+	print_queue(higheasttrain);
 	return NULL;
 }
 
@@ -175,6 +272,76 @@ void load_train(struct Train* tr){
 		printf("Train %d is ready to go West\n", tr->id);
 	}
 }
+
+void print_queue(struct Train* test){
+	printf("<<%d>>", test->id);
+	while(test != NULL){
+		printf("Train %d ->", test->id);
+		test = test->next;
+	}
+}
+
+/*void scheduler(int numtrains){
+	int donetrains = 0;
+	while(donetrains < numtrains){
+		while(pthread_mutex_lock(&higheast) != 0);
+		printf("locked higheast\n");
+		if(higheasttrain != NULL){
+			pthread_cond_wait(&chigheast, &higheast);
+		}
+	
+		while(pthread_mutex_lock(&highwest) != 0);
+		printf("locked highwest\n");
+	
+		while(pthread_mutex_lock(&loweast) != 0);
+		printf("locked loweast\n");
+
+		while(pthread_mutex_lock(&lowwest) != 0);
+		printf("locked lowwest\n");
+	
+		while(pthread_mutex_lock(&maintrack) != 0);
+		printf("locked maintrack\n");
+
+		if(higheasttrain != NULL || highwesttrain != NULL || loweasttrain != NULL ||     lowwesttrain != NULL){
+
+			if(highwesttrain != NULL || higheasttrain != NULL){
+				if(higheasttrain == NULL){
+					choochoo(highwesttrain);
+				} else if(highwesttrain == NULL){
+					choochoo(higheasttrain);
+				}else if(higheasttrain->loadtime > highwesttrain->loadtime){
+					choochoo(highwesttrain);
+				}else if(higheasttrain->loadtime < highwesttrain->loadtime){
+					choochoo(higheasttrain);
+				}else if(higheasttrain->loadtime == highwesttrain->loadtime){
+					if(*direc == 'e'){
+						choochoo(highwesttrain);	
+					}else if(*direc == 'w'){
+						choochoo(higheasttrain);
+					}
+				}
+
+			} else if (highwesttrain == NULL && higheasttrain == NULL){
+				if(loweasttrain == NULL){
+					choochoo(lowwesttrain);
+				} else if(lowwesttrain == NULL){
+					choochoo(loweasttrain);
+				}else if(loweasttrain->loadtime > lowwesttrain->loadtime){
+					choochoo(lowwesttrain);
+				}else if(loweasttrain->loadtime < lowwesttrain->loadtime){
+					choochoo(higheasttrain);
+				}else if(loweasttrain->loadtime == lowwesttrain->loadtime){
+					if(*direc == 'e'){
+						choochoo(lowwesttrain);	
+					}else if(*direc == 'w'){
+						choochoo(loweasttrain);
+					}
+				}
+			}
+		
+		} //main if
+	} //main while
+}*/
 
 /*
 MAIN
@@ -192,8 +359,51 @@ int main(int argc, char *argv[]){
 	struct Train* trainp = trains;
 	getinput(argc, trainp, argv);
 
-	pthread_mutex_init (&maintrack, NULL);
-	pthread_barrier_init (&barrier, NULL, numtrains);
+	if (pthread_barrier_init (&barrier, NULL, numtrains) != 0){
+		printf("\n barrier init failed\n");
+		return 1;
+	}
+
+	if (pthread_mutex_init(&maintrack, NULL) != 0){
+       		printf("\n mutex init failed\n");
+        	return 1;
+    	}
+	if (pthread_mutex_init(&highwest, NULL) != 0){
+       		printf("\n mutex init failed\n");
+        	return 1;
+    	}
+	if (pthread_mutex_init(&higheast, NULL) != 0){
+       		printf("\n mutex init failed\n");
+        	return 1;
+    	}
+	if (pthread_mutex_init(&lowwest, NULL) != 0){
+       		printf("\n mutex init failed\n");
+        	return 1;
+    	}
+	if (pthread_mutex_init(&loweast, NULL) != 0){
+       		printf("\n mutex init failed\n");
+        	return 1;
+    	}
+	if (pthread_cond_init(&cmaintrack, NULL) != 0){
+       		printf("\n mutex init failed\n");
+        	return 1;
+    	}
+	if (pthread_cond_init(&chighwest, NULL) != 0){
+       		printf("\n mutex init failed\n");
+        	return 1;
+    	}
+	if (pthread_cond_init(&chigheast, NULL) != 0){
+       		printf("\n mutex init failed\n");
+        	return 1;
+    	}
+	if (pthread_cond_init(&clowwest, NULL) != 0){
+       		printf("\n mutex init failed\n");
+        	return 1;
+    	}
+	if (pthread_cond_init(&cloweast, NULL) != 0){
+       		printf("\n mutex init failed\n");
+        	return 1;
+    	}
 
 	int x = 0;
 	for(x = 0; x < numtrains; x++){
@@ -202,17 +412,23 @@ int main(int argc, char *argv[]){
 			return 1;
 		}
 	}
+
+	//scheduler(numtrains);
 	
 	int a = 0;
 	for(a = 0; a < numtrains; a++){
 		if(pthread_join(trains[a].thread, NULL)){
 			fprintf(stderr, "Thread join failed\n");
 		}
-	}
+	}	
+
+	pthread_mutex_destroy(&maintrack);
+	pthread_mutex_destroy(&lowwest);
+	pthread_mutex_destroy(&loweast);
+	pthread_mutex_destroy(&highwest);
+	pthread_mutex_destroy(&higheast);
 	return 0;
 }
-
-
 
 
 
