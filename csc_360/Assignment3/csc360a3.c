@@ -182,7 +182,22 @@ void listFiles(char * mmap, int offset, int length, int numRootblock){
 	free(file_size_bytes);
 }
 
-void find_filename_part3(char * mp, int offset, int length, int numRootblock, char * name, int blocksize, char * filename){
+/*
+void append_file(char * mp, FILE * file, int start, int blocksize){
+	int offset = start*blocksize;
+	int filesize = get_super_info(mp, 600 , 4);
+	char * the_file = (char *)malloc(sizeof(char) * filesize);
+	the_file = memcpy(the_file, mp+offset, filesize);
+	fwrite(the_file, filesize, 1, file);
+	if((get_super_info(mp, offset/blocksize, 4)) == 0 || (get_super_info(mp, offset/blocksize, 4)) == 1 ){
+		exit(1);
+	} else {
+		append_file(mp, file, offset, blocksize);
+	}
+}
+*/
+
+void find_filename_part3(char * mp, int offset, int length, int numRootblock, char * name, int blocksize, char * filename, int fat_start){
 	int i,j = 0;
 	char *root_entry = (char *)malloc(sizeof(char) * length);
 	char *file_name_bytes = (char *)malloc(sizeof(char) * 31);
@@ -199,7 +214,12 @@ void find_filename_part3(char * mp, int offset, int length, int numRootblock, ch
 					the_file = memcpy(the_file, mp+start*blocksize, filesize);
 					file = fopen(name, "wb");
 					fwrite(the_file, filesize, 1, file);
+					//if((get_super_info(mp, start, 4)) == 0 || (get_super_info(mp, start, 4)) == 1){
+					//	printf("I shouldnt go here for mkfile.cc\n");
 					exit(1);
+					//} else {
+					//	append_file(mp, file, start, blocksize);
+					//}
 				}
 			} //if
 		} //for
@@ -209,17 +229,60 @@ void find_filename_part3(char * mp, int offset, int length, int numRootblock, ch
 	free(file_name_bytes);
 }
 
-/*
-void find_space_input(char * mp, struct SuperBlock_Struct start, char * path){
-	char * token;
-	token = strtok(path, "/");
-	if(token != NULL){
-		printf("funtime\n");
-		struct FolderLocation_Struct fold;
-		fold = find_folder(token, mp, start.root_start*start.block_size, 64, start.root_blocks, start.block_size);
+int find_space(char* mp, int blocksneeded, int fatstart, int fatblocks, int block_size){
+	int freecount = 0;
+	int x = 0;
+	for(x = 0; x < fatblocks*block_size; x += 4){
+		uint32_t value = 0;
+		value = get_super_info(mp, fatstart*block_size + x, 4);
+		if(freecount == blocksneeded){
+			int startfree = (fatstart*block_size+x - (blocksneeded-1)*4);
+			return startfree;
+		} else if(value == 0){
+			freecount += 1;
+		} else {
+			freecount = 0;
+		}
+	}
+	return -1;
+}
+
+int get_filesize(char * mp, int offset, int length, int numRootblock, char * filename){
+	int i,j = 0;
+	char *root_entry = (char *)malloc(sizeof(char) * length);
+	char *file_name_bytes = (char *)malloc(sizeof(char) * 31);
+	for (i=0; i < numRootblock; i ++){	
+		for (j = 0; j < 8; j ++){ 
+			root_entry = memcpy(root_entry, mp+offset+512*i+length*j, length);
+			if ((root_entry[0] & 0x02) == 0x02){
+				file_name_bytes = memcpy(file_name_bytes, root_entry + 27, 31);
+				printf("#%s#\n", file_name_bytes);
+				if(strcmp(file_name_bytes, filename) == 0){
+					int filesize = get_super_info(mp, offset+512*i+length*j+9, 4);
+					return filesize;
+				}
+			} //if
+		} //for
+	} //for
+	printf("File not Found.\n");
+	exit(1);
+	free(root_entry);
+	free(file_name_bytes);
+}
+
+void copy_file(char* imgmp, char* filemp, int block, int fatfreestart, int blocksize){
+	int x = 0;
+	for(x = 0; x < block; x++){
+		memcpy(imgmp+fatfreestart+x*blocksize, filemp+x*blocksize, blocksize);
 	}
 }
-*/
+
+
+void update_fat(int fatfreestart, int blocks){
+}
+
+void add_directory_entries(int fatfreestart, int blocks){
+}
 
 /////////PART 1///////////////////////
 
@@ -356,9 +419,9 @@ void diskget(char** argv){
 	if(folders[fut] != NULL){
 		struct FolderFileLocation_Struct fold;
 		fold = find_folder_part3(folders, mp, start.root_start*start.block_size, 64, start.root_blocks, start.block_size, pre, cur, fut);
-		find_filename_part3(mp, fold.offset*start.block_size, 64, fold.numblocks, name, start.block_size, fold.filename);
+		find_filename_part3(mp, fold.offset*start.block_size, 64, fold.numblocks, name, start.block_size, fold.filename, start.fat_start);
 	} else {
-		find_filename_part3(mp, start.root_start*start.block_size, 64, start.root_blocks, name, start.block_size, folders[cur]);
+		find_filename_part3(mp, start.root_start*start.block_size, 64, start.root_blocks, name, start.block_size, folders[cur], start.fat_start);
 	}
 }
 #endif
@@ -369,11 +432,11 @@ void diskget(char** argv){
 
 #if defined(PART4)
 void diskput(char ** argv){
-/*	struct SuperBlock_Struct start;
+	struct SuperBlock_Struct start;
 	int file;
 	struct stat sf;
 	char *mp;
-	char* path = argv[3];
+	char* name = argv[2];
 	if((file = open(argv[1], O_RDONLY))){
 		fstat(file, &sf);
 		mp = mmap(NULL, sf.st_size, PROT_READ, MAP_SHARED, file, 0);
@@ -386,9 +449,34 @@ void diskput(char ** argv){
 	} else {
 		printf("File not Found.\n");
 	}
+
+	struct SuperBlock_Struct start2;
+	struct stat sf2;
+	int file2;
+	char* mp2;
+	if((file2 = open(argv[2], O_RDONLY))){
+		fstat(file2, &sf2);
+		mp2 = mmap(NULL, sf.st_size, PROT_READ, MAP_SHARED, file, 0);
+		start2.block_size = get_super_info(mp, 8, 2);
+		start2.block_count = get_super_info(mp, 10, 4);
+		start2.fat_start = get_super_info(mp, 14, 4);
+		start2.fat_blocks = get_super_info(mp, 18, 4);
+		start2.root_start = get_super_info(mp, 22, 4);
+		start2.root_blocks = get_super_info(mp, 26, 4);
+	} else {
+		printf("File not Found.\n");
+	}
 	
-	find_space_input(mp, start, path);
-	*/
+	int filesize = get_filesize(mp2, start2.root_start, 64, start2.root_blocks, name);
+	int blocks = filesize/start.block_size + 1;
+	int fatfreestart = find_space(mp, blocks, start.fat_start, start.fat_blocks, start.block_size);
+	if(fatfreestart == -1){
+		printf("No free space in disk\n");	
+	} else {
+		copy_file(mp, mp2, blocks, fatfreestart, start.block_size);
+		update_fat(fatfreestart, blocks);
+		add_directory_entries(fatfreestart, blocks);
+	}
 }
 #endif
 
