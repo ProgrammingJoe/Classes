@@ -1,0 +1,33 @@
+//
+// mkfile.cc
+//
+
+#include <stdio.h>
+#include <iostream>
+
+#define BUFFER_SIZE	512
+#define BLOCK_COUNT	5
+
+using namespace std;
+
+int main ( int argc, char *argv[] )
+{
+	char *buffer[BUFFER_SIZE];
+	int	blockCount = BLOCK_COUNT;
+	char ch	= 'A';
+	
+	if ( argc != 4 )
+	{
+		cout << "Usage: makefile filename size character" << endl;
+		return 0;
+	}
+	
+	FILE *file = fopen (argv[1], "wb");
+	
+	if ( !file )
+	{
+		cout << "Couldn't create: " << argv[1] << endl;
+		return 0;
+	}
+	
+	if ( argv[2]
