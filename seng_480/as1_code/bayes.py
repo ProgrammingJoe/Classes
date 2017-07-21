@@ -27,8 +27,8 @@ class MyBayesClassifier():
         self._class_prob = np.zeros(Ncls)
         splicer, self._chanceofclass = self.section(y)
         class_arrays = np.split(X, splicer)
-        print("smooth is " + str(alpha_smooth))
-        print("The probabilities of each class are: " + str(self._chanceofclass))
+        # print("smooth is " + str(alpha_smooth))
+        # print("The probabilities of each class are: " + str(self._chanceofclass))
         # Calculate probabilities for every feature for each class
         for title in range(0, Ncls):
             self._feat_prob[title] = (class_arrays[title].sum(0) + alpha_smooth)/(len(class_arrays[title]) + alpha_smooth*Nfeat) # + total number of words used in positive scenarios
@@ -36,6 +36,8 @@ class MyBayesClassifier():
     def predict(self, X):
         pred = np.zeros(len(X))
         counter = 0
+        print(len(X))
+        print(len(X[0]))
         for sentence in X:
             problist = []
             for title in range(0, self._Ncls):
@@ -96,6 +98,7 @@ lines_pos_stem = steminput(lines_pos)
 
 data_train = lines_neg_stem[0:5000] + lines_pos_stem[0:5000] # sentences
 data_test = lines_neg_stem[5000:] + lines_pos_stem[5000:] # sentences
+# print(data_test)
 
 y_train = np.append(np.ones((1,5000)), (np.zeros((1,5000)))) # 5000 1's then 5000 0's
 y_test = np.append(np.ones((1,331)), np.zeros((1,331))) # 331 1's then 331 0's
@@ -109,4 +112,5 @@ feature_names = vectorizer.get_feature_names()
 clf = MyBayesClassifier(1);
 clf.train(X_train,y_train);
 y_pred = clf.predict(X_test)
-print np.mean((y_test-y_pred)==0)
+# print(y_pred)
+# print np.mean((y_test-y_pred)==0)
