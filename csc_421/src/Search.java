@@ -122,6 +122,7 @@ public class Search {
 			Node node = frontier.remove();
 
 			if(problem.goal_test(node.state)){
+
 				return Solution(node);
 			}
 
@@ -187,6 +188,20 @@ public class Search {
 		}
 	}
 
+	void PrintTree(Node n) {
+		for (int i = 0; i <= n.depth; i++){
+			System.out.print("  ");
+		}
+
+		System.out.print(n.state + " (g=" + (double)n.path_cost + ", h=" + (double)problem.h(n.state) + ", f=" + (double)(n.path_cost + problem.h(n.state)) + ") order=" + n.order +"\n");
+
+		for (Node node : node_list){
+			if (node.parent_node == n){
+				PrintTree(node);
+			}
+		}
+	}
+
 	private Node MakeNode(Object state) {
 		Node node = new Node();
 		node.state = state;
@@ -229,6 +244,9 @@ public class Search {
 
 		while(!solution.isEmpty())
 			solution_str += solution.pop() + " ";
+
+		// Question 2: Uncomment for printed tree
+		// PrintTree(initialNode);
 
 		return solution_str;
 	}

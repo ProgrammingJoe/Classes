@@ -121,17 +121,41 @@ public class ProblemCannibals extends Problem {
 
         //Checking to see if the numbers of cannibals, missionaries, and boat
         //are more then 3,3,1 respectively
-        //TODO
+				if(state.canArray[missL] + state.canArray[missR] > 3){
+					System.out.println("You fool!");
+					return false;
+				}
+				if(state.canArray[cannL] + state.canArray[cannR] > 3){
+					System.out.println("You fool!");
+					return false;
+				}
+				if(state.canArray[boatL] + state.canArray[boatR] > 1){
+					System.out.println("You fool!");
+					return false;
+				}
 
         //Now, checking if cannibals out number missionaries
-        //TODO
+        if(state.canArray[cannL] > state.canArray[missL] && state.canArray[missL] > 0){
+					return false;
+				}
+				if(state.canArray[cannR] > state.canArray[missR] && state.canArray[missR] > 0){
+					return false;
+				}
 
         return true;
     }
 
 	double step_cost(Object fromState, Object toState) { return 1; }
 
-	public double h(Object state) { return 0; }
+  public double h(Object state) {
+    // Question 5: With heuristic
+    StateCannibals h_state = (StateCannibals) state;
+		double heuristic = h_state.canArray[missL] + h_state.canArray[cannL] - 1;
+		return heuristic;
+
+    // Question 5: Without heuristic
+    // return 0;
+	}
 
 
 	public static void main(String[] args) throws Exception {
@@ -141,8 +165,22 @@ public class ProblemCannibals extends Problem {
 
 		Search search  = new Search(problem);
 
+		System.out.println("TreeSearch------------------------");
 		System.out.println("BreadthFirstTreeSearch:\t\t" + search.BreadthFirstTreeSearch());
+		System.out.println("UniformCostTreeSearch:\t\t" + search.UniformCostTreeSearch());
+		System.out.println("DepthFirstTreeSearch:\t\t" + search.DepthFirstTreeSearch());
+		System.out.println("GreedyBestFirstTreeSearch:\t" + search.GreedyBestFirstTreeSearch());
+		System.out.println("AstarTreeSearch:\t\t" + search.AstarTreeSearch());
 
+		System.out.println("\n\nGraphSearch----------------------");
 		System.out.println("BreadthFirstGraphSearch:\t" + search.BreadthFirstGraphSearch());
+		System.out.println("UniformCostGraphSearch:\t\t" + search.UniformCostGraphSearch());
+		System.out.println("DepthFirstGraphSearch:\t\t" + search.DepthFirstGraphSearch());
+		System.out.println("GreedyBestGraphSearch:\t\t" + search.GreedyBestFirstGraphSearch());
+		System.out.println("AstarGraphSearch:\t\t" + search.AstarGraphSearch());
+
+		System.out.println("\n\nIterativeDeepening----------------------");
+		System.out.println("IterativeDeepeningTreeSearch:\t" + search.IterativeDeepeningTreeSearch());
+		System.out.println("IterativeDeepeningGraphSearch:\t" + search.IterativeDeepeningGraphSearch());
 	}
 }
