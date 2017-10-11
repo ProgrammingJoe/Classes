@@ -1,0 +1,4 @@
+data loaded
+Extracting features from the training data using a count vectorizer
+[ 0.  0.  0. ...,  0.  0.  0.]
+alpha=1 accuracy = 0.235772

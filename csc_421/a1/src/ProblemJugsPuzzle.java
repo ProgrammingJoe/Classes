@@ -49,7 +49,7 @@ public class ProblemJugsPuzzle extends Problem {
 
       //jug3 into jug12
       successor_state = new StateJugsPuzzle(can_state);
-      successor_state.canArray[jug3] = outOfJug(successor_state.canArray[jug3], successor_state.canArray[jug8], 8);
+      successor_state.canArray[jug3] = outOfJug(successor_state.canArray[jug3], successor_state.canArray[jug8], 12);
       successor_state.canArray[jug12] = intoJug(successor_state.canArray[jug3], successor_state.canArray[jug12], 12);
       if (isValid(successor_state)) set.add(successor_state);
 
@@ -65,13 +65,13 @@ public class ProblemJugsPuzzle extends Problem {
 
       //jug8 into jug12
       successor_state = new StateJugsPuzzle(can_state);
-      successor_state.canArray[jug8] = outOfJug(successor_state.canArray[jug3], successor_state.canArray[jug8], 8);
+      successor_state.canArray[jug8] = outOfJug(successor_state.canArray[jug3], successor_state.canArray[jug8], 12);
       successor_state.canArray[jug12] = intoJug(successor_state.canArray[jug8], successor_state.canArray[jug12], 12);
       if (isValid(successor_state)) set.add(successor_state);
 
       //jug8 into jug3
       successor_state = new StateJugsPuzzle(can_state);
-      successor_state.canArray[jug8] = outOfJug(successor_state.canArray[jug3], successor_state.canArray[jug8], 8);
+      successor_state.canArray[jug8] = outOfJug(successor_state.canArray[jug3], successor_state.canArray[jug8], 3);
       successor_state.canArray[jug3] = intoJug(successor_state.canArray[jug8], successor_state.canArray[jug3], 3);
       if (isValid(successor_state)) set.add(successor_state);
 
@@ -87,7 +87,7 @@ public class ProblemJugsPuzzle extends Problem {
 
       //jug12 into jug3
       successor_state = new StateJugsPuzzle(can_state);
-      successor_state.canArray[jug12] = outOfJug(successor_state.canArray[jug3], successor_state.canArray[jug8], 8);
+      successor_state.canArray[jug12] = outOfJug(successor_state.canArray[jug3], successor_state.canArray[jug8], 3);
       successor_state.canArray[jug3] = intoJug(successor_state.canArray[jug12], successor_state.canArray[jug3], 3);
       if (isValid(successor_state)) set.add(successor_state);
 

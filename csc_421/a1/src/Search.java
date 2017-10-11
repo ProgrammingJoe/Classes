@@ -96,8 +96,10 @@ public class Search {
 
 			Node node = frontier.remove();
 
-			if( problem.goal_test(node.state) )
+			if(problem.goal_test(node.state) ) {
 				return Solution(node);
+			}
+
 
 			frontier.insertAll(Expand(node,problem));
 			cnt++;
